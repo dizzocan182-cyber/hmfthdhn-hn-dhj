@@ -146,7 +146,14 @@ void CheatLoop() {
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-    // Debug için console aç
+    // ── DPI awareness — PER_MONITOR_V2 ──
+    HMODULE u32 = GetModuleHandleW(L"user32.dll");
+    if (u32) {
+        typedef BOOL(WINAPI* pSDAC)(DPI_AWARENESS_CONTEXT);
+        auto fn = (pSDAC)GetProcAddress(u32, "SetProcessDpiAwarenessContext");
+        if (fn) fn(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        else SetProcessDPIAware();   // win8 fallback
+    }
     AllocConsole();
     FILE* fDummy;
     freopen_s(&fDummy, "CONOUT$", "w", stdout);
