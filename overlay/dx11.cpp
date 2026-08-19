@@ -13,12 +13,18 @@ bool InitializeImGui(ID3D11Device* device, ID3D11DeviceContext* context, HWND hw
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.IniFilename = nullptr; // .ini kaydetme
 
+    // ── DPI scale ──
+    float dpi = 96.f;
+    HDC hdc = GetDC(NULL);
+    if (hdc) { dpi = (float)GetDeviceCaps(hdc, LOGPIXELSX); ReleaseDC(NULL, hdc); }
+    float scale = dpi / 96.f;
+    ImFontConfig fc; fc.SizePixels = 14.f * scale;
+    io.Fonts->AddFontDefault(&fc);
+
     SetupNoxStyle();
 
     ImGui_ImplWin32_Init(hwnd);
     ImGui_ImplDX11_Init(device, context);
-
-    io.Fonts->AddFontDefault();
 
     return true;
 }
