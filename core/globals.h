@@ -26,6 +26,8 @@ struct Globals {
     uintptr_t offset_replay    = 0;     // DAT_140246378
     uintptr_t offset_local_ped = 0;     // DAT_140246380
     uintptr_t offset_camera    = 0;     // DAT_140246390
+    int  local_ped_sub_offset  = 0;     // AOB/brute-force: world_ptr içindeki sub-offset
+    bool local_ped_is_sub      = false; // true ise sub-offset mode
 
     // ── Sub-offsets (common across versions) ──────────────────────────────────
     int entity_list_offset      = 0x10a8;   // DAT_1402463a0
