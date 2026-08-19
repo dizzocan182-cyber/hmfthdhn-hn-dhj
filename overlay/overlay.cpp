@@ -63,25 +63,22 @@ bool Overlay::CreateOverlayWindow() {
 
     HWND target_window = g.game_window;
     RECT target_rect{};
+    int win_x = 0, win_y = 0;
     if (target_window && GetWindowRect(target_window, &target_rect)) {
-        m_width = target_rect.right - target_rect.left;
+        m_width  = target_rect.right  - target_rect.left;   // artık physical (DPI-aware olduk)
         m_height = target_rect.bottom - target_rect.top;
+        win_x = target_rect.left;
+        win_y = target_rect.top;
     } else {
-        m_width = 1920;
-        m_height = 1080;
+        m_width = 1920; m_height = 1080;
     }
-
     m_hwnd = CreateWindowExA(
-        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
-        wc.lpszClassName,
-        "NOX Overlay",
+        WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE,
+        wc.lpszClassName, "NOX Overlay",
         WS_POPUP,
-        0, 0,
+        win_x, win_y,           // ← game window'a kilit
         m_width, m_height,
-        NULL, NULL,
-        wc.hInstance, NULL
-    );
-
+        NULL, NULL, wc.hInstance, NULL);
     if (!m_hwnd) {
         MessageBoxA(NULL, "Window creation failed!", "Error", MB_OK | MB_ICONERROR);
         return false;
@@ -178,6 +175,22 @@ void Overlay::Run() {
             if (msg.message == WM_QUIT) {
                 m_running = false;
                 break;
+            }
+        }
+        // ── game window'u takip et ──
+        if (g.game_window) {
+            RECT r{};
+            if (GetWindowRect(g.game_window, &r)) {
+                int w = r.right - r.left, h = r.bottom - r.top;
+                if (w != m_width || h != m_height || r.left != m_last_x || r.top != m_last_y) {
+                    m_width = w; m_height = h; m_last_x = r.left; m_last_y = r.top;
+                    MoveWindow(m_hwnd, r.left, r.top, w, h, TRUE);
+                    if (m_swap_chain) {
+                        CleanupRenderTarget();
+                        m_swap_chain->ResizeBuffers(0, w, h, DXGI_FORMAT_UNKNOWN, 0);
+                        CreateRenderTarget();
+                    }
+                }
             }
         }
         if (!m_running) break;
